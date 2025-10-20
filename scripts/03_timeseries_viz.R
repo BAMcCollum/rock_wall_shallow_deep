@@ -11,7 +11,6 @@ library(glue)
 
 # load data and set themes
 source("scripts/load_data_settings.r")
-fitted_curves <- read_csv("data/fitted_long_ordbetareg.csv")
 # 
 # ggplot(.x,
 #        aes(x = proportion, y = depth,
