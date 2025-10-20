@@ -26,7 +26,7 @@ source("scripts/load_data_settings.r")
 
 # plot all species
 species_data_as_list <- 
-  subsite_data |>
+  subsite_substrate_long |>
   group_by(species) |>
   nest() |>
   mutate(data = map(data, ~.x |> mutate(species = species))) |>
