@@ -43,8 +43,7 @@ for(one_sp in unique(fitted_curves$species)){
 
   .fit <- filter(fitted_curves, species == one_sp)
   
-  .coef <- filter(coefs_long, species == one_sp)
-  
+
   y_lab <- glue("Percent Cover of {one_sp}")
   
   # correct some species names
@@ -75,7 +74,7 @@ for(one_sp in unique(fitted_curves$species)){
   
   
   ggsave(glue("figures/fits_with_data_panels/{one_sp}.jpg"),
-         width = 6, height = 10)
+         width = 4, height = 5)
   
   ##
   # show dot and arrow plots
@@ -98,6 +97,6 @@ for(one_sp in unique(fitted_curves$species)){
          color = "Year",
          x = y_lab) #sub in species name
   
-  ggsave(glue("figures/prediction_arrows/{sp}.jpg"),
+  ggsave(glue("figures/prediction_arrows/{one_sp}.jpg"),
          width = 5, height = 3)
 }
