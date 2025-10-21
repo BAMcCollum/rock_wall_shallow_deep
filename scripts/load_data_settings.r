@@ -21,7 +21,8 @@ mean_year <- mean(seq(min(substrate_long$year), max(substrate_long$year), by = 1
 ##
 theme_set(theme_classic(base_size = 14))
 
-depth_scale <- function(...) scale_color_manual(values = c("darkorchid4", "sienna1", "chartreuse4"), ...)
+depth_color_scale <- function(...) scale_color_manual(values = c("darkorchid4", "sienna1", "chartreuse4"), ...)
+depth_fill_scale <- function(...) scale_fill_manual(values = c("darkorchid4", "sienna1", "chartreuse4"), ...)
 
 
 year_color_scale <- function(...){
