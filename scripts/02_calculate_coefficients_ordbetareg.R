@@ -44,7 +44,9 @@ mods_long <- subsite_substrate_long |>
  # filter(species %in% c("scypha_sp", "botryllus_schlosseri")) |>
   
   # fit a model to each attribute
-  group_by(species) |>
+  group_by(species,
+           gen_spp #for later thermal merge
+           ) |>
   mutate(sp1 = species) |>
   nest() |>
   mutate(mod = map(data, ~ordbetareg(proportion ~
@@ -62,7 +64,8 @@ coefs_long <- mods_long |>
   # great, get back the data
   unnest(avg_trends) |>
   select(-fitted, -data, -mod, -coef) |>
-  arrange(species)
+  arrange(species) |>
+  left_join(thermal_data)
 
 View(coefs_long)
 
@@ -74,6 +77,7 @@ fitted_long <- mods_long |>
   arrange(species) |> 
   # great, get back the data
   unnest(fitted) |>
-  select(-data, -mod, -coef) 
+  select(-data, -mod, -coef) |>
+  left_join(thermal_data)
 
 write_csv(fitted_long,"data/fitted_long_ordbetareg.csv")

@@ -14,6 +14,11 @@ subsite_substrate_long <- read_csv("data/substrate_data_subsite_long.csv")
 # for later use
 mean_year <- mean(seq(min(substrate_long$year), max(substrate_long$year), by = 1))
 
+# thermal data
+thermal_data <- read_csv("data/Occurrence_based_species_thermal_indicies_Photos_100825.csv") |>
+  select(gen_spp, species_id, n_obis_rec,
+         BO21_tempmax_bdmean_mean, BO21_tempmax_bdmin_mean, BO21_tempmax_bdmin_max)
+
 
 ##
 # set visual themes
