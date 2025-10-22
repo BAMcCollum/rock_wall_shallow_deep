@@ -11,6 +11,24 @@ library(glue)
 
 # load data and set themes
 source("scripts/load_data_settings.r")
+
+##
+# Show what we have data for
+##
+substrate_long |>
+  group_by(site, depth, subsite, year) |>
+  summarise(photos = n_distinct(image)) |>
+ggplot(aes(x = year, y = paste(site, subsite, sep = "-"),
+           fill = photos, color = depth)) +
+  geom_tile(size = 0.5) +
+  scale_fill_viridis_c() +
+  depth_color_scale() +
+  labs(fill = "Numer of\nImages", x = "", y = "Subsite", color = "Depth") +
+  guides(color = guide_legend(override.aes = list(fill="white")))
+
+
+ggsave("figures/site_info.jpg",
+       width = 10, height = 6)
 # 
 # ggplot(.x,
 #        aes(x = proportion, y = depth,
