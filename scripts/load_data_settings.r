@@ -24,7 +24,7 @@ thermal_data <- read_csv("data/Occurrence_based_species_thermal_indicies_Photos_
 # set visual themes
 # and scales
 ##
-theme_set(theme_classic(base_size = 14))
+theme_set(theme_classic(base_size = 18))
 
 depth_color_scale <- function(...) scale_color_manual(values = c("darkorchid4", "sienna1", "chartreuse4"), ...)
 depth_fill_scale <- function(...) scale_fill_manual(values = c("darkorchid4", "sienna1", "chartreuse4"), ...)
