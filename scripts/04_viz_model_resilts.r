@@ -23,14 +23,35 @@ ggplot(coefs_long,
        aes(x = year_cent.trend,
            xmin = lower.HPD, xmax = upper.HPD,
            y = species, color = depth, shape = depth)) +
-  geom_point() +
+  geom_point(size = 2) +
   geom_linerange() +
   labs(x="logit trend", y = "", color = "", shape = "") +
   geom_vline(xintercept = 0, lty = 2) +
-  depth_scale() +
+  depth_color_scale() +
   theme(legend.position = "bottom")
 
 ggsave("figures/coefs.jpg", width = 6, height = 4)
+
+## show as heat map
+
+ggplot(coefs_long |> arrange(desc(depth), desc(year_cent.trend)),
+       aes(fill = year_cent.trend,
+           y = depth,
+           x = species |> forcats::fct_inorder())) +
+  geom_tile() +
+  labs(x="", y = "", 
+       fill = "Coefficient of\nchange", ) +
+  theme(legend.position = "bottom") +
+    scale_fill_distiller(palette = "BrBG") +
+  theme_classic(base_size = 16)  +
+  theme(axis) +
+  scale_x_discrete(position = "top",
+                   labels = scales::label_wrap(15),
+                   guide = guide_axis(n.dodge = 2)) 
+  
+
+ggsave("figures/coefs_heatmap.jpg", width = 12, height = 4)
+
 
 ##
 # show data and predictions
