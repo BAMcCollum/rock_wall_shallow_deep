@@ -46,6 +46,4 @@ mod_info |>
   tab_header(
     title = "Coefficients for Time Series Models of Change by Depth",
     subtitle = "Ordered Beta Regression where proportion ~ centered year * depth + (1|Subsite)"
-  ) |>
-
-  readr::write_csv("tables/timeseries_coefs_fits.csv")
+  ) |>  gtsave("tables/timeseries_coefs.docx")
