@@ -7,7 +7,6 @@
 
 library(readr)
 library(ordbetareg)
-library(visreg)
 library(ggplot2)
 library(dplyr)
 library(tidyr)

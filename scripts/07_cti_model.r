@@ -51,7 +51,7 @@ ggsave("figures/cti_by_depth_boxplot.jpg", width = 8, height = 9)
 # Model
 ##
 
-mod_cti <- glmmTMB(cti_presence ~ year*depth + 
+mod_cti <- glmmTMB(cti_presence ~ year_cent*depth + 
                      (1|subsite),
                    data = subsite_thermal_summary)
 ##
@@ -70,7 +70,7 @@ Anova(mod_cti)
 ##
 
 # viz
-emtrends(mod_cti, ~depth, "year") |>
+emtrends(mod_cti, ~depth, "year_cent") |>
   contrast(method = "pairwise", adjust = "none") |> 
   plot() +
   geom_vline(xintercept = 0, lty = 2) +
@@ -80,7 +80,7 @@ ggsave("figures/cti_slope_comparison.jpg")
 
 
 # write out table
-emtrends(mod_cti, ~depth, "year")|>
+emtrends(mod_cti, ~depth, "year_cent")|>
   contrast(method = "pairwise", adjust = "none") |> 
   tidy() |>
   select(-term, -null.value) |>
@@ -93,12 +93,13 @@ emtrends(mod_cti, ~depth, "year")|>
 ##
 
 modelbased::estimate_relation(mod_cti,
-                              by = c("year",
+                              by = c("year_cent",
                                      "depth")) |> 
   plot(
     show_data = TRUE,
     point = list(alpha = 1, size = 4),
     line = list(size = 1.5)) +
+  scale_x_continuous(labels = function(x) x + mean_year) +
   depth_color_scale() +
   depth_fill_scale()  +
   facet_wrap(vars(forcats::fct_rev(depth)), ncol = 1)+

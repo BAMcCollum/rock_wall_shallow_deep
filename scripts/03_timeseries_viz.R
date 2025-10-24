@@ -74,7 +74,7 @@ species_data_as_list <-
                color = depth)) +
       geom_point() +
       geom_line()+
-      depth_scale() +
+      depth_color_scale() +
     labs(x = "Year",
          color = "",
          y = y_lab)+ #sub in species name
@@ -91,7 +91,7 @@ species_data_as_list <-
                color = depth)) +
       geom_point() +
       geom_line()+
-      depth_scale() +
+      depth_color_scale() +
       labs(x = "Year",
            color = "",
            y = y_lab)+ #sub in species name

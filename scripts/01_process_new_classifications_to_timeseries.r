@@ -11,61 +11,66 @@ library(tidyr)
 library(ggplot2)
 
 # classification data
-cover_data <- read_csv("data/test_predictions_coverage_20251019.csv") |>
-  rename(image = Image)
+cover_data <- read_csv("data/Photos_to_be_Annotated_predictions_20251023.csv") |>
+  rename(image = Image) |>
+  separate_wider_delim(image, "/",
+                       names = c("site",
+                                 "year",
+                                 "depth", 
+                                 "folder",
+                                 "image_name"),
+                       cols_remove = FALSE) |>
+  select(-folder, -image_name) |>
+  mutate(depth = gsub(" .*", "", depth),#trim site name from some
+         year = gsub(" .*", "", year),
+         site = gsub(" ", "", site)) 
+  
+# new data for annotations we already did
+annotated_cover_data <- read_csv("data/Annotated_photos_predictions_20251023.csv") |>
+  rename(image = Image) |>
+  mutate(image = gsub("-", "/", image),
+         image = gsub("_", "/", image)) |>
+  separate_wider_delim(image, "/",
+                       names = c("year",
+                                 "site",
+                                 "depth", 
+                                 "image_name"),
+                       too_few = "debug",
+                       too_many = "merge", # some subsites and image names were split
+                       cols_remove = FALSE) |>
+  # For some, depths got weird
+  mutate(depth = ifelse(grepl("HRDeepP", depth), "Deep", depth)) |>
+  mutate(depth = gsub("HRD", "Deep", depth))|> #filename snafu
+  #ok, fixed
+  select(-c(image_name, image_ok, image_pieces, image_remainder)) |>
+  mutate(site = ifelse(site %in% c("DW", "LR", "LRB", "DWB", "DWT", "LRT"),
+                   "HRD",
+                   site))
 
-
-# site-subsite info
-# make sure that all image names are .png
-manifest <- read_csv("data/files_to_process_subsites.csv") |>
-  mutate(image = gsub("\\.jpg", "\\.png", image),
-         image = gsub("\\.JPG", "\\.png", image)) |>
-  rename(subsite = Subsite)
-
-# manifest |>
-#   group_by(image) |>
-#   summarize(dups = n() > 1) |>
-#   filter(dups)
-
-# fixed duplicate image info
-# make sure that all image names are .png
-dup_manifest <- read_csv("data/fixme_cesar_name.csv")|>
-  rename(subsite = Subsite) |>
-  mutate(image = gsub("\\.jpg", "\\.png", image),
-         image = gsub("\\.JPG", "\\.png", image)) |>
-  rename(orig_image = image,
-         image = cesar_name) # this is what we need
+all_cover_data <- bind_rows(cover_data, annotated_cover_data) |>
+  mutate(image_name = gsub(".*/", "", image)) |>
+  mutate(year = as.numeric(year))
 
 ##
-# join the manifest and the cover data
+# write manifest so we have it
 ##
-
-# remove duplicate names from manifest
-manifest_filtered <- manifest |>
-  filter(!(image %in% dup_manifest$image))
-
-# check to make sure all dups are out
-manifest_filtered |>
+all_cover_data |>
   group_by(image) |>
-  summarize(dups = n() > 1) |>
-  filter(dups)
-# 
-# 
-# still_bad <- cover_data |>
-#   filter(grepl("image0", image)) |>
-#   group_by(image) |>
-#   slice(1L) |>
-#   select(image) 
-# 
-# still_bad #|>
-#  # write_csv("data/moar_fixes_needed.csv")
-###
+  slice(1L) |>
+  select(site, year, depth, image) |>
+  write_csv("data/manifest_unmarked.csv")
 
-corrected_manifest <- bind_rows(manifest_filtered, dup_manifest)
+##
+# file info
+##
+manifest <- read_csv("data/manifest_20251023.csv")
 
-cover_joined <- left_join(cover_data, 
-                          corrected_manifest, 
-                          relationship = "many-to-one") 
+# check bad joins - should be nothing
+anti_join(manifest, all_cover_data)
+anti_join(all_cover_data, manifest)
+
+cover_joined <- left_join(all_cover_data, manifest) |>
+  mutate(subsite = ifelse(subsite == "VDRD", "VDR", subsite)) #typo
 
 
 # see when things were sampled
@@ -81,25 +86,21 @@ cover_joined |>
 
 ###
 # Get correct total image pixels
-# by deleting the BACK from total image pixels and then 
+# by deleting the FRM and BACK from total image pixels and then 
 # filtering BACK out as we no longer need it
 ###
 cover_joined_proportions <- cover_joined |>
   group_by(site, subsite, year, image) |>
-  mutate(BACK_pixels = ifelse(class == "BACK", pixels, 0),
+  mutate(#BACK_pixels = ifelse(class == "BACK", pixels, 0),  BACK is non-classified species
+         framer_pixels = ifelse(class == "FRM", pixels, 0),
          mobile_pixels = ifelse(class %in% c("DROE", "AST"), pixels, 0),
            total_sampled_pixels = `total pixels in image` -
-           sum(BACK_pixels) - sum(mobile_pixels)) |>
+           #sum(BACK_pixels) - #BACK is non-classified species
+           sum(mobile_pixels) - 
+           sum(framer_pixels)) |>
   ungroup() |>
-  filter(!(class %in% c("BACK", "DROE", "AST"))) |>
+  filter(!(class %in% c("BACK", "DROE", "AST", "FRM"))) |>
   mutate(proportion = pixels / total_sampled_pixels)
-
-# check and make sure it all sums to 1 for each image
-cover_joined_proportions |>
-  group_by(image) |>
-  summarize(img_proportion = sum(proportion)) |>
-  pull(img_proportion) |>
-  (\(.x) which((1-.x) > 0.001))() #deals with precision error
 
 ###
 # Add zeroes where needed
@@ -110,13 +111,13 @@ cover_joined_proportions_zeroes <- cover_joined_proportions |>
   complete(crossing(nesting(site, subsite, image,
                             depth,
                             year, 
-                            full_file_name, total_sampled_pixels), 
+                            image_name, total_sampled_pixels), 
                     class), 
            fill = list(pixels = 0, proportion = 0)) |>
   select(site, subsite, image,
          depth, year, class,
          proportion, pixels, total_sampled_pixels,
-         full_file_name)
+         image_name)
 
 ##
 # expand names of classes to species
@@ -125,16 +126,27 @@ class_dictionary <- read_csv("data/Merged_Species_list_with_colors.csv") |>
   rename(class = CoralNetCode) |>
   rename_with(tolower)
 
+newclass <- tribble(
+  ~genus, ~species, ~class, ~`hex code`,
+  "Mussel", "", "MUSS", "#?????"
+)
+
+class_dictionary <- bind_rows(class_dictionary, newclass)
+
 #class_dictionary[class_dictionary$class %in% clean_data$class,] |> View()
 
 # join! by class
 clean_data_joined <- 
   left_join(cover_joined_proportions_zeroes, class_dictionary) |>
   mutate(species = paste(genus, species)) |>
-  select(-genus)
+  select(-genus)|>
+  mutate(species = gsub(" $", "", species))
 
 # check for missed classes
 clean_data_joined$class[which(is.na(clean_data_joined$`hex code`))] |> unique()
+
+# see unique species
+clean_data_joined |> pull(species) |> unique() |> sort()
 
 ##
 # write our what species we have
@@ -154,7 +166,7 @@ site_data_dictionary <-
   rename(depth = depth_category)
 
 aggregated_data_with_info <- 
-  left_join(clean_data_joined, site_data_dictionary)
+  left_join(clean_data_joined, site_data_dictionary) 
 
 # check and make sure we didn't miss anything
 which(is.na(aggregated_data_with_info$average_depth))
@@ -169,7 +181,7 @@ anti_join(site_data_dictionary, aggregated_data_with_info)
 # which makes some functions think we are referencing another
 # directory - also prep for thermal info and add a centered year
 ##
-species_names <- read_csv("data/co_occuring_species_20250919_with_new_classes.csv") |>
+species_names <- read_csv("data/co_occuring_species_20251024_with_new_classes.csv") |>
   select(-coefficients_species)
 
 aggregated_data_with_info_sp <- 
@@ -179,6 +191,9 @@ aggregated_data_with_info_sp <-
   rename(species = clean_species) |>
   mutate( year = as.numeric(year),
           year_cent = year - mean(seq(min(year), max(year), by = 1)))
+
+# check species names
+aggregated_data_with_info_sp$species |> unique() |> sort()
 
 ##
 # write out
