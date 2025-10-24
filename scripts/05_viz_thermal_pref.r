@@ -1,6 +1,5 @@
 library(tidyverse)
-library(ggplot2)
-library(readr)
+
 
 # read in and go from here
 #source("scripts/load_data_settings.r")
@@ -46,7 +45,8 @@ coefout %>%
   theme_classic() +
   theme(#plot.margin = margin(l=25,b=5,unit="pt"),
     axis.text.x = element_text(angle = -90, hjust = 0))+
-  geom_hline(yintercept=c(14.07, 17.4), linetype='dashed', color=c('turquoise', 'green')) +
+  geom_hline(yintercept=c(15.3, 17.5), linetype='dashed', color=c('turquoise', 'green')) + #Pre 2004 95% quantile for 15m and 25m
+  geom_hline(yintercept=c(17.9, 19.6), color=c('turquoise', 'green')) + #Post 2004 95% quantile for 15m and 25m
   theme(axis.text.x = element_text(face = "italic")) +
   theme(axis.text=element_text(size=16),
         axis.title=element_text(size=18))
