@@ -6,10 +6,16 @@ library(ggplot2)
 ##
 
 # quad level data
-substrate_long <- read_csv("data/substrate_data_long.csv")
+#substrate_long <- read_csv("data/substrate_data_long.csv")
 
 #subsite level data
-subsite_substrate_long <- read_csv("data/substrate_data_subsite_long.csv")
+subsite_substrate_long <- read_csv("data/substrate_data_mixed_subsite_long.csv") |>
+  filter(month %in% c(NA, 6:9)) |> #summer sample
+  # filter to the later month
+  group_by(site, subsite, year, species) |>
+  slice_tail() |> # get second sample point if there are 2
+  ungroup() |>
+  mutate(year_cent = year - mean(seq(min(year), max(year), by = 1)))
 
 # for later use
 mean_year <- mean(seq(min(substrate_long$year), max(substrate_long$year), by = 1))

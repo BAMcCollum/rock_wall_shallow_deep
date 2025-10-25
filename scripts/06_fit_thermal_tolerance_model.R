@@ -18,7 +18,8 @@ library(gt)
 source("scripts/load_data_settings.r")
 
 
-coefs_long <- read_csv("data/change_coefficients_ordbetareg.csv")
+coefs_long <- read_csv("data/change_coefficients_ordbetareg.csv") |>
+  mutate(interval = (upper.HPD - lower.HPD)/2)
 #View (coefs_with_indicies)
 
 ##
@@ -35,9 +36,11 @@ ggplot(coefs_long, aes(x = BO21_tempmax_bdmin_mean,
 # fit the model
 ##
 mod_bdmean_min <- 
-  lm(year_cent.trend ~ depth*BO21_tempmax_bdmin_mean, 
+  glmmTMB::glmmTMB(year_cent.trend ~ 
+                     depth*BO21_tempmax_bdmin_mean +
+                     (1|gen_spp), 
+                   weight = 1/interval,
            data = coefs_long)
-
 
 ##
 # check model assumptions

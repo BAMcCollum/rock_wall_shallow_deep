@@ -48,7 +48,7 @@ subsite_thermal_summary <- subsite_substrate_long |>
   group_by(site, subsite, depth, year, year_cent) |>
   filter(proportion>0) |>
   filter(!is.na(gen_spp)) |>
-  summarize(cti_presence = mean(BO21_tempmax_bdmin_mean),
+  summarize(cti_presence = mean(BO21_tempmax_bdmin_mean, na.rm = TRUE),
             cti_weighted = weighted.mean(BO21_tempmax_bdmin_mean, w = proportion))
 
 ggplot(subsite_thermal_summary,

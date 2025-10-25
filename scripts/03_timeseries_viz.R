@@ -15,15 +15,15 @@ source("scripts/load_data_settings.r")
 ##
 # Show what we have data for
 ##
-substrate_long |>
+subsite_substrate_long |>
   group_by(site, depth, subsite, year) |>
-  summarise(photos = n_distinct(image)) |>
+  summarise(samples = n()) |>
 ggplot(aes(x = year, y = paste(site, subsite, sep = "-"),
-           fill = photos, color = depth)) +
+           fill = depth, color = depth)) +
   geom_tile(size = 0.5) +
-  scale_fill_viridis_c() +
+  depth_fill_scale() +
   depth_color_scale() +
-  labs(fill = "Numer of\nImages", x = "", y = "Subsite", color = "Depth") +
+  labs(fill = "Depth", color = "Depth", x = "", y = "") +
   guides(color = guide_legend(override.aes = list(fill="white")))
 
 
@@ -48,17 +48,16 @@ ggsave("figures/site_info.jpg",
 ggplot(subsite_substrate_long,
        aes(x = year, y = proportion,
            color = depth,
-           group = paste(site, subsite, class))) +
+           group = paste(site, subsite, depth, species))) +
   geom_line() +
   facet_wrap(vars(forcats::fct_rev(depth)), ncol = 1) +
   depth_color_scale() +
   labs(color = "", x = "")
 
-
 ggplot(subsite_substrate_long |> filter(!is.na(gen_spp)),
        aes(x = year, y = proportion,
            color = BO21_tempmax_bdmin_mean,
-           group = paste(site, subsite, class))) +
+           group = paste(site, subsite, species))) +
   geom_line() +
   facet_wrap(vars(forcats::fct_rev(depth)), ncol = 1) +
   scale_color_distiller(palette = "BrBG") +
