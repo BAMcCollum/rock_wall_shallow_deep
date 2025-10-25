@@ -250,3 +250,17 @@ subsite_data_thermal <-
 # write out
 ##
 write_csv(subsite_data_thermal, "data/substrate_data_subsite_long.csv")
+
+
+##
+# cover dist
+##
+subsite_data_thermal |>
+  group_by(site, year, subsite, depth) |>
+  summarize(cover = sum(proportion)) |>
+  ggplot(aes(x = cover)) +
+  geom_histogram() +
+  labs(x = "Sum of Proportional Cover", y = "Count") +
+  facet_wrap(vars(forcats::fct_rev(depth)))
+
+ggsave("figures/total_cover_histogram.jpg", width = 8, height = 4)
