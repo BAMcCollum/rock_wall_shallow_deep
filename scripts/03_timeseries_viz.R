@@ -42,6 +42,28 @@ ggsave("figures/site_info.jpg",
 #   year_color_scale() +
 #   labs(subtitle = .x$species[1], color = "", y = "") 
 
+##
+# everything!
+##
+ggplot(subsite_substrate_long,
+       aes(x = year, y = proportion,
+           color = depth,
+           group = paste(site, subsite, class))) +
+  geom_line() +
+  facet_wrap(vars(forcats::fct_rev(depth)), ncol = 1) +
+  depth_color_scale() +
+  labs(color = "", x = "")
+
+
+ggplot(subsite_substrate_long |> filter(!is.na(gen_spp)),
+       aes(x = year, y = proportion,
+           color = BO21_tempmax_bdmin_mean,
+           group = paste(site, subsite, class))) +
+  geom_line() +
+  facet_wrap(vars(forcats::fct_rev(depth)), ncol = 1) +
+  scale_color_distiller(palette = "BrBG") +
+  labs(color = "thermal\npreference", x = "")
+
 # plot all species
 species_data_as_list <- 
   subsite_substrate_long |>
