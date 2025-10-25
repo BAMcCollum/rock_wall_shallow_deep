@@ -13,12 +13,14 @@ library(car)
 library(broom)
 library(ggrepel)
 library(gt)
+library(emmeans)
 
 # load data and set themes
 source("scripts/load_data_settings.r")
 
 
-coefs_long <- read_csv("data/change_coefficients_ordbetareg.csv")
+coefs_long <- read_csv("data/change_coefficients_ordbetareg.csv")|>
+  mutate(interval = (upper.HPD - lower.HPD)/2)
 #View (coefs_with_indicies)
 
 ##
@@ -28,15 +30,18 @@ ggplot(coefs_long, aes(x = BO21_tempmax_bdmin_mean,
                        y = year_cent.trend,
                        color = depth))+
   geom_point()+
+  geom_linerange(aes(ymin = lower.HPD, ymax = upper.HPD)) +
   depth_color_scale() +
-  stat_smooth(method = "lm") #Ideally would like to color by functional group, depth strata
-
+  stat_smooth(method = "lm")+
+  facet_wrap(vars(forcats::fct_rev(depth)))
 ##
 # fit the model
 ##
 mod_bdmean_min <- 
-  lm(year_cent.trend ~ depth*BO21_tempmax_bdmin_mean, 
-           data = coefs_long)
+  glmmTMB::glmmTMB(year_cent.trend ~ 
+                     depth*BO21_tempmax_bdmin_mean +
+                     (1|gen_spp), 
+           data = coefs_long, weights = 1/sqrt(interval))
 
 
 ##
@@ -53,6 +58,11 @@ Anova(mod_bdmean_min)
 ##
 # difference in slopes
 ##
+emtrends(mod_bdmean_min, 
+         specs =~ depth,
+         var = "BO21_tempmax_bdmin_mean") |> plot() +
+  geom_vline(xintercept = 0, lty = 2)
+
 emtrends(mod_bdmean_min, 
          specs =~ depth,
          var = "BO21_tempmax_bdmin_mean") |>
