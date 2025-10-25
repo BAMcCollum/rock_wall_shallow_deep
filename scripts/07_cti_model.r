@@ -18,6 +18,20 @@ library(emmeans)
 source("scripts/load_data_settings.r")
 
 ##
+# cover dist
+##
+subsite_data_thermal |> filter(!is.na(gen_spp)) |>
+  group_by(site, year, subsite, depth) |>
+  summarize(cover = sum(proportion)) |>
+  ggplot(aes(x = cover)) +
+  geom_histogram() +
+  labs(x = "Sum of Proportional Cover", y = "Count") +
+  facet_wrap(vars(forcats::fct_rev(depth)))
+
+ggsave("figures/thermal_identified_cover_histogram.jpg", width = 8, height = 4)
+
+
+##
 # create joined data for analysis 
 ##
 # 
@@ -34,7 +48,8 @@ subsite_thermal_summary <- subsite_substrate_long |>
   group_by(site, subsite, depth, year, year_cent) |>
   filter(proportion>0) |>
   filter(!is.na(gen_spp)) |>
-  summarize(cti_presence = mean(BO21_tempmax_bdmin_mean))
+  summarize(cti_presence = mean(BO21_tempmax_bdmin_mean),
+            cti_weighted = weighted.mean(BO21_tempmax_bdmin_mean, w = proportion))
 
 ggplot(subsite_thermal_summary,
        aes(x = year, group = year, y = cti_presence, fill = depth)) +
