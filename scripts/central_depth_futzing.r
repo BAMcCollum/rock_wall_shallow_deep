@@ -61,13 +61,15 @@ ggplot(.x,
 .x <- subsite_substrate_long |>
   # make sure years have something at each depth
   group_by(year) |>
-  mutate(num_sites = n_distinct(site)) |>
+  mutate(num_sites = n_distinct(site),
+         has_deep = "Deep" %in% depth) |>
   ungroup() |>
-  filter(num_sites ==3) |>
+  filter(num_sites == 3 & has_deep) |>
   # filter to a species
   filter(species == "Ectopleura spp.") 
 
 mod <- ordbetareg(proportion ~ t2(year,average_depth), data = .x)
+mod <- ordbetareg(proportion ~ year*average_depth, data = .x)
 
 pred_dat <- crossing(average_depth = seq(7,26, length.out=100),
                      year = seq(1989, 2023))
@@ -95,8 +97,7 @@ ggplot(fit_dat,
   group_by(year, average_depth) |>
   summarize(proportion = mean(proportion)) |>
   ggplot(aes(y = average_depth, x = year)) +
-  geom_raster(aes(fill = proportion*100), 
-              interpolate = FALSE) +
+  geom_tile(aes(fill = proportion*100)) +
   scale_fill_viridis_c() +
   scale_y_continuous(transform = "reverse") +
   labs(title = "Ectopleura", y = "Depth(m)", x = "", fill = "% Cover")# +
