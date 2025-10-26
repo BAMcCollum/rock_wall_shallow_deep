@@ -24,7 +24,7 @@ source("scripts/load_data_settings.r")
 
 # helper functions
 get_fitted_values <- function(mod, adf, 
-                              mean_year = mean(seq(min(substrate_long$year), max(substrate_long$year), by = 1)),
+                              mean_year = mean(seq(min(subsite_substrate_long$year), max(subsite_substrate_long$year), by = 1)),
                               ...){
   emmeans(mod, 
           specs = ~year_cent*depth,
