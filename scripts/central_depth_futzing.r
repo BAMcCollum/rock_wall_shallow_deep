@@ -69,7 +69,7 @@ ggplot(.x,
   filter(species == "Ectopleura spp.") 
 
 mod <- ordbetareg(proportion ~ t2(year,average_depth), data = .x)
-mod <- ordbetareg(proportion ~ year*average_depth, data = .x)
+@mod <- ordbetareg(proportion ~ year*average_depth, data = .x)
 
 pred_dat <- crossing(average_depth = seq(7,26, length.out=100),
                      year = seq(1989, 2023))
