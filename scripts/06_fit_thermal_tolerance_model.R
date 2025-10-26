@@ -19,7 +19,9 @@ source("scripts/load_data_settings.r")
 
 
 coefs_long <- read_csv("data/change_coefficients_ordbetareg.csv") |>
-  mutate(interval = (upper.HPD - lower.HPD)/2)
+  mutate(interval = (upper.HPD - lower.HPD)/2,
+         var = interval^2,
+         prec = 1/var)
 #View (coefs_with_indicies)
 
 ##
@@ -27,10 +29,18 @@ coefs_long <- read_csv("data/change_coefficients_ordbetareg.csv") |>
 ##
 ggplot(coefs_long, aes(x = BO21_tempmax_bdmin_mean, 
                        y = year_cent.trend,
-                       color = depth))+
+                       color = depth, fill = depth))+
   geom_point()+
   depth_color_scale() +
-  stat_smooth(method = "lm") #Ideally would like to color by functional group, depth strata
+  depth_fill_scale() +
+  stat_smooth(method = "lm") +
+  geom_hline(yintercept=0.0, linetype='dashed', 
+             linewidth = 0.5, colour='black') +
+  facet_wrap(vars(forcats::fct_rev(depth)), ncol = 1) +
+  labs(x = "Average Thermal Maxima\n(Occupancy derived max temp at species min depth) in (°C)",  
+       y = "Coefficient of Change") +
+  guides(color = "none", fill = "none") +
+  theme_classic(base_size = 18)
 
 ##
 # fit the model
@@ -39,7 +49,7 @@ mod_bdmean_min <-
   glmmTMB::glmmTMB(year_cent.trend ~ 
                      depth*BO21_tempmax_bdmin_mean +
                      (1|gen_spp), 
-                   weight = 1/interval,
+                   weights = prec,
            data = coefs_long)
 
 ##
@@ -77,22 +87,42 @@ gt::gt(Anova(mod_bdmean_min) |> round(3)) |>
 ##
 # Visualize
 ##
-modelbased::estimate_relation(mod_bdmean_min,
-                              by = c("BO21_tempmax_bdmin_mean",
-                                     "depth")) |> 
-  plot(#ribbon = "none",
-       show_data = TRUE,
-       point = list(alpha = 1, size = 2)) +
+pred_dat <- insight::get_datagrid(mod_bdmean_min,
+                                  by = c("BO21_tempmax_bdmin_mean",
+                                         "depth"),
+                                  length = 200)
+
+fit_dat <- augment(mod_bdmean_min, newdata = pred_dat,
+                   conf.int = TRUE,
+                   effects = "fixed")
+
+# modelbased::estimate_relation(mod_bdmean_min,
+#                               by = c("BO21_tempmax_bdmin_mean",
+#                                      "depth")) |> 
+#   plot(#ribbon = "none",
+#        show_data = TRUE,
+#        point = list(alpha = 1, size = 2)) +
+  
+ggplot(fit_dat, 
+       aes(x = BO21_tempmax_bdmin_mean, y = .fitted,
+           color = depth, fill = depth)) +
+  geom_line(size = 1.5) +
+  geom_ribbon(alpha = 0.5, color = NA,
+              mapping = aes(ymin = .fitted - 2*.se.fit, 
+                            ymax = .fitted+2*.se.fit)) +
   depth_color_scale() +
   depth_fill_scale()  +
+  facet_wrap(vars(forcats::fct_rev(depth)), ncol = 1) +
   geom_hline(yintercept=0.0, linetype='dashed', 
              linewidth = 0.5, colour='black') +
+  geom_point(data = coefs_long,
+                  mapping = aes(x = BO21_tempmax_bdmin_mean, 
+                                y = year_cent.trend), size = 2) +
   geom_text_repel(data = coefs_long,
                   mapping = aes(label = gen_spp, group = gen_spp,
                                 x = BO21_tempmax_bdmin_mean, y = year_cent.trend),
                   size = 6, fontface = "italic", color = "black",
                   max.overlaps = 30, seed = 31415) +
-  facet_wrap(vars(forcats::fct_rev(depth)), ncol = 1)+
   labs(x = "Average Thermal Maxima\n(Occupancy derived max temp at species min depth) in (°C)",  
        y = "Coefficient of Change") +
   guides(color = "none", fill = "none") +
@@ -100,3 +130,28 @@ modelbased::estimate_relation(mod_bdmean_min,
   
 
 ggsave("figures/coefs_with_indicies.jpg", width = 8, height = 9)
+
+
+
+ggplot(fit_dat, 
+       aes(x = BO21_tempmax_bdmin_mean, y = .fitted,
+           color = depth, fill = depth)) +
+  geom_line(size = 1.5) +
+  geom_ribbon(alpha = 0.5, color = NA,
+              mapping = aes(ymin = .fitted - 2*.se.fit, 
+                            ymax = .fitted+2*.se.fit)) +
+  depth_color_scale() +
+  depth_fill_scale()  +
+  facet_wrap(vars(forcats::fct_rev(depth)), ncol = 1) +
+  geom_hline(yintercept=0.0, linetype='dashed', 
+             linewidth = 0.5, colour='black') +
+  geom_point(data = coefs_long,
+             mapping = aes(x = BO21_tempmax_bdmin_mean, 
+                           y = year_cent.trend), size = 2) +
+  labs(x = "Average Thermal Maxima\n(Occupancy derived max temp at species min depth) in (°C)",  
+       y = "Coefficient of Change") +
+  guides(color = "none", fill = "none") +
+  theme_classic(base_size = 18) +
+  scale_y_continuous(limits = c(-0.24, 0.24))
+
+ggsave("figures/coefs_with_indicies_notext.jpg", width = 8, height = 9)

@@ -18,7 +18,8 @@ models <- list.files("models/abundance_models",
                      full.names = TRUE) 
 
 # function to get coefficient and r2 from each model
-get_mod_info <- function(mod){
+get_mod_info <- function(mod, sp){
+  print(sp)
   mod <- readRDS(mod)
   coef_tab <- suppressWarnings(tidy(mod)) |>
     select(-effect, -component, -group)
@@ -33,7 +34,7 @@ get_mod_info <- function(mod){
 
 # iterate over models
 mod_info <- purrr::map2(species, models, 
-                        ~get_mod_info(.y) |>
+                        ~get_mod_info(.y, .x) |>
                           mutate(species = c(.x)))
 
 # write it all out
