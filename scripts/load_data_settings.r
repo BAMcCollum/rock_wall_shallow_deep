@@ -36,3 +36,11 @@ year_color_scale <- function(...){
                         expand = expansion(mult = 0, add = 0),
                         ...)
 }
+
+
+year_color_scale_discrete <- function(...){
+  pal <- wesanderson::wes_palette("Zissou1", 3, type = "continuous")
+  scale_color_manual(values = rev(pal),
+                        #expand = expansion(mult = 0, add = 0),
+                        ...)
+}
