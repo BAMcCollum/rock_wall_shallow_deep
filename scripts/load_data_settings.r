@@ -18,7 +18,7 @@ subsite_substrate_long <- read_csv("data/substrate_data_mixed_subsite_long.csv")
   mutate(year_cent = year - mean(seq(min(year), max(year), by = 1)))
 
 # for later use
-mean_year <- mean(seq(min(substrate_long$year), max(substrate_long$year), by = 1))
+mean_year <- mean(seq(min(subsite_substrate_long$year), max(subsite_substrate_long$year), by = 1))
 
 # thermal data
 thermal_data <- read_csv("data/Occurrence_based_species_thermal_indicies_Photos_100825.csv") |>
@@ -40,5 +40,13 @@ year_color_scale <- function(...){
   pal <- wesanderson::wes_palette("Zissou1", 50, type = "continuous")
   scale_color_gradientn(colors = rev(pal),
                         expand = expansion(mult = 0, add = 0),
+                        ...)
+}
+
+
+year_color_scale_discrete <- function(...){
+  pal <- wesanderson::wes_palette("Zissou1", 3, type = "continuous")
+  scale_color_manual(values = rev(pal),
+                       # expand = expansion(mult = 0, add = 0),
                         ...)
 }
