@@ -51,7 +51,7 @@ get_trends_by_depth <- function(mod){
 # transitions always likely throoughout time
 # fewer high cover than low cover
 
-deep_prior <- c(set_prior("normal(0,10", class = "b"))
+deep_prior <- c(set_prior("normal(0,10)", class = "b"))
 # one set that kinda works - coef_prior_SD = .01, phi_intercept_prior_SD = 1
 
 prior_mod <- ordbetareg(proportion ~

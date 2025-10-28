@@ -89,13 +89,13 @@ for(one_sp in unique(fitted_curves$species)){
                alpha = 0.4) +
   facet_wrap(vars(forcats::fct_rev(depth)), ncol = 1) +
     labs(x = "Year",
-         color = "",
+         color = "", fill = "",
          y = y_lab)+ #sub in species name
     theme(axis.title.y = ggtext::element_markdown())
   
   
   ggsave(glue("figures/fits_with_data_panels/{one_sp}.jpg"),
-         width = 4, height = 5)
+         width = 5, height = 6)
   
   ##
   # show dot and arrow plots

@@ -63,7 +63,6 @@ check_model(mod_cti)
 # Omnibus
 ##
 Anova(mod_cti)
-Anova(mod_cti)
 
 ##
 # Compare slopes

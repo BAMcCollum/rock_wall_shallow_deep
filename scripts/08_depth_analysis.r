@@ -27,7 +27,7 @@ common_sampling_subsites <- subsite_substrate_long |>
   mutate(num_sites = n_distinct(site),
          has_deep = "Deep" %in% depth) |>
   ungroup() |>
-  filter(num_sites == 3 & has_deep) |>
+  filter(num_sites >=2 & has_deep) |>
   # make decades
   mutate(decade = cut(year, breaks = c(1988, 2000, 2010, 2024)),
          decade = factor(decade,
@@ -41,7 +41,7 @@ for(one_sp in unique(common_sampling_subsites$species)){
     group_by(year, average_depth) |>
     summarize(proportion = mean(proportion)) |>
     ggplot(aes(y = average_depth, x = year)) +
-    geom_tile(aes(fill = proportion)) +
+    geom_tile(aes(fill = proportion*100)) +
     scale_fill_viridis_c(
     #  transform = scales::transform_pseudo_log(base = 10), #na.value=1,
      #                    labels = scales::label_percent(accuracy = 0.01),
@@ -86,7 +86,7 @@ ggplot(decadal_dist |> filter(!is.na(BO21_tempmax_bdmin_mean)),
        aes(y = proportion*100,
            x = average_depth,
            color = BO21_tempmax_bdmin_mean, group = species)) +
-  geom_point(size=1.5) + geom_line(size=1) +
+  geom_point(size=1.5) + geom_line(linewidth=1) +
   facet_grid(cols = vars(decade), 
              rows = vars(cut_number(BO21_tempmax_bdmin_mean, 3)),
              scale = "free_x")  +
@@ -212,3 +212,33 @@ modelbased::estimate_expectation(depth_thermal_decadal_mod,
   facet_wrap(vars(decade))
 
 ggsave("figures/central_depth_model.jpg", width = 8, height = 4)
+
+
+##
+# GAM by year?
+# ##
+# 
+# 
+# depth_thermal_annual_mod <- 
+#   mgcv::gam(central_depth ~ t2(year, BO21_tempmax_bdmin_mean),
+#                    data = central_depth_annual)
+# 
+# 
+# ## Viz
+# modelbased::estimate_relation(depth_thermal_annual_mod, 
+#                                  by = c("year", 
+#                                         "BO21_tempmax_bdmin_mean")) |> 
+#   plot(show_data = TRUE) +
+#   labs(color = "", fill= "") 
+# 
+# 
+# modelbased::estimate_relation(depth_thermal_annual_mod, 
+#                               by = c("BO21_tempmax_bdmin_mean",
+#                                      "year")) |> 
+#   plot(show_data = TRUE) +
+#   labs(color = "", fill= "")+
+#   scale_y_continuous(transform = "reverse") +
+#   labs(y = "Central Depth (m)", x = "Thermal Preference",
+#        color = "", fill = "") #+
+#   year_color_scale() +
+#   year_fill_scale()
