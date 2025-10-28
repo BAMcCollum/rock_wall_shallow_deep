@@ -219,17 +219,42 @@ ggsave("figures/central_depth_model.jpg", width = 8, height = 4)
 # ##
 # 
 # 
-# depth_thermal_annual_mod <- 
-#   mgcv::gam(central_depth ~ t2(year, BO21_tempmax_bdmin_mean),
-#                    data = central_depth_annual)
+depth_thermal_annual_mod <-
+  mgcv::gam(central_depth ~ t2(year, BO21_tempmax_bdmin_mean),
+                   data = central_depth_annual)
 # 
 # 
 # ## Viz
-# modelbased::estimate_relation(depth_thermal_annual_mod, 
-#                                  by = c("year", 
-#                                         "BO21_tempmax_bdmin_mean")) |> 
-#   plot(show_data = TRUE) +
-#   labs(color = "", fill= "") 
+modelbased::estimate_relation(depth_thermal_annual_mod,
+                                 by = c("year",
+                                        "BO21_tempmax_bdmin_mean")) |>
+  plot(show_data = TRUE,
+       ribbon = "none") +
+  labs(color = "", fill= "") +
+  scale_color_distiller(palette = "BrBG") +
+  scale_fill_distiller(palette = "BrBG") +
+  scale_y_continuous(transform = "reverse")
+
+
+
+depth_thermal_annual_linear <-
+  glmmTMB::glmmTMB(central_depth ~ year * BO21_tempmax_bdmin_mean + (1|species),
+            data = central_depth_annual)
+
+
+modelbased::estimate_relation(depth_thermal_annual_linear,
+                              by = c("year",
+                                     "BO21_tempmax_bdmin_mean")) |>
+  plot(show_data = TRUE,
+       ribbon = "none") +
+  labs(color = "", fill= "") +
+  scale_color_distiller(palette = "BrBG") +
+  scale_fill_distiller(palette = "BrBG") +
+  scale_y_continuous(transform = "reverse")
+
+Anova(depth_thermal_annual_linear)
+
+# 
 # 
 # 
 # modelbased::estimate_relation(depth_thermal_annual_mod, 
