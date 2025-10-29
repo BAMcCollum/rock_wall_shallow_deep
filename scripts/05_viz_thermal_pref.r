@@ -2,17 +2,11 @@ library(tidyverse)
 
 
 # read in and go from here
-#source("scripts/load_data_settings.r")
+source("scripts/load_data_settings.r")
 
-thermal_data <- read_csv("data/Occurrence_based_species_thermal_indicies_Photos_100825.csv") |>
-  select(gen_spp, species_id, n_obis_rec,
-         BO21_tempmax_bdmean_mean, BO21_tempmax_bdmin_mean, BO21_tempmax_bdmin_max,
-         BO21_tempmax_bdmean_q5, BO21_tempmax_bdmean_q95)
-
-coefout <- thermal_data
 
 # filter to species we have
-# coefout <- filter(coefout, gen_spp %in% subsite_substrate_long$gen_spp)
+coefout <- filter(coefout, gen_spp %in% subsite_substrate_long$gen_spp)
 View(coefout)
 # plot data ---------------------------------------------------------------
 
