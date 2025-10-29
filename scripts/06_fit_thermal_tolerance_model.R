@@ -20,7 +20,8 @@ source("scripts/load_data_settings.r")
 
 
 coefs_long <- read_csv("data/change_coefficients_ordbetareg.csv")|>
-  mutate(interval = (upper.HPD - lower.HPD)/2)
+  mutate(interval = (upper.HPD - lower.HPD)/2,
+         prec = 1/sqrt(interval))
 #View (coefs_with_indicies)
 
 ##
@@ -30,7 +31,7 @@ ggplot(coefs_long, aes(x = BO21_tempmax_bdmin_mean,
                        y = year_cent.trend,
                        color = depth))+
   geom_point()+
-  geom_linerange(aes(ymin = lower.HPD, ymax = upper.HPD)) +
+#  geom_linerange(aes(ymin = lower.HPD, ymax = upper.HPD)) +
   depth_color_scale() +
   stat_smooth(method = "lm")+
   facet_wrap(vars(forcats::fct_rev(depth)))
@@ -41,7 +42,7 @@ mod_bdmean_min <-
   glmmTMB::glmmTMB(year_cent.trend ~ 
                      depth*BO21_tempmax_bdmin_mean +
                      (1|gen_spp), 
-           data = coefs_long, weights = 1/sqrt(interval))
+           data = coefs_long, weights =prec)
 
 
 ##
@@ -86,7 +87,7 @@ gt::gt(Anova(mod_bdmean_min) |> round(3)) |>
 ##
 modelbased::estimate_relation(mod_bdmean_min,
                               by = c("BO21_tempmax_bdmin_mean",
-                                     "depth")) |> 
+                                     "depth")) |>
   plot(#ribbon = "none",
        show_data = TRUE,
        point = list(alpha = 1, size = 2)) +
@@ -107,3 +108,24 @@ modelbased::estimate_relation(mod_bdmean_min,
   
 
 ggsave("figures/coefs_with_indicies.jpg", width = 8, height = 9)
+
+
+
+modelbased::estimate_relation(mod_bdmean_min,
+                              by = c("BO21_tempmax_bdmin_mean",
+                                     "depth")) |>
+  plot(#ribbon = "none",
+    show_data = TRUE,
+    point = list(alpha = 1, size = 2)) +
+  depth_color_scale() +
+  depth_fill_scale()  +
+  geom_hline(yintercept=0.0, linetype='dashed', 
+             linewidth = 0.5, colour='black') +
+  facet_wrap(vars(forcats::fct_rev(depth)), ncol = 1)+
+  labs(x = "Average Thermal Maxima\n(Occupancy derived max temp at species min depth) in (°C)",  
+       y = "Coefficient of Change") +
+  guides(color = "none", fill = "none") +
+  theme_classic(base_size = 18)
+
+
+ggsave("figures/coefs_without_indicies.jpg", width = 8, height = 9)
