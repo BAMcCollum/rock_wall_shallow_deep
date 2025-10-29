@@ -4,7 +4,7 @@ library(ggplot2)
 library(performance)
 
 # new data for annotations we already did
-annotated_cover_data <- read_csv("data/annotations/Annotated_photos_coverage_18_20251028.csv") |>
+annotated_cover_data <- read_csv("data/annotations/Annotated_photos_coverage_19_20251029.csv") |>
   rename(image = Image) |>
   filter(class != "BACK")
 
