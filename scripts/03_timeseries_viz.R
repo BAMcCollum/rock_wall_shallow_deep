@@ -8,6 +8,7 @@ library(dplyr)
 library(ggplot2)
 library(purrr)
 library(glue)
+library(tidyr)
 
 # load data and set themes
 source("scripts/load_data_settings.r")
