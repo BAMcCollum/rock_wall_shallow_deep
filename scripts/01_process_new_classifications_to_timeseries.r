@@ -10,121 +10,115 @@ library(glue)
 library(tidyr)
 library(ggplot2)
 
-# classification data
-cover_data <- read_csv("data/annotations/Photos_to_be_Annotated_coverage_18_20251028.csv") |>
-  rename(image = Image) |>
-  separate_wider_delim(image, "/",
-                       names = c("site",
-                                 "year",
-                                 "depth", 
-                                 "folder",
-                                 "image_name"),
-                       cols_remove = FALSE,
-                       too_few = "debug")  |>
-  filter(!is.na(year)) #some training data left in
-# 
-# ## hopefully temporary - classification data missing some info
-# manifest_unknown <- read_csv("data/manifest_unknown_20251028.csv") |>
-#   mutate(image = gsub("(^.*)/([^\\/]+$)", "\\2", image))
-# 
-# cover_data_na <- cover_data |> filter(is.na(year)) |>
-#   select(image, class, pixels, `total pixels in image`) |>
-#   left_join(manifest_unknown)
-# # 
-# # write_csv(tibble(image = cover_data_na |> pull(image) |> unique()),
-# #                  "data/manifest_unknown.csv")
-# 
-# cover_data_na_na <- cover_data_na |> filter(is.na(year)) |>
-#   select(image, class, pixels, `total pixels in image`)
-#   select(image, class, pixels, `total pixels in image`) |>
-#   separate_wider_delim(image, "-",
-#                        names = c("year",
-#                                  "subsite",
-#                                  "site",
+# # classification data
+# cover_data <- read_csv("data/annotations/Photos_to_be_Annotated_coverage_19_20251029.csv") |>
+#   rename(image = Image) |>
+#   # mutate(image = gsub("-", "\\/", image),
+#   #        image = gsub("_", "\\/", image)) |>
+#   separate_wider_delim(image, "/",
+#                        names = c("site",
+#                                  "year",
+#                                  "depth", 
+#                                  "folder",
 #                                  "image_name"),
 #                        cols_remove = FALSE,
-#                        too_few = "debug") |>
-#   mutate(image_name = image)
+#                        too_few = "debug")  |>
+#   filter(!is.na(year)) #some training data left in- remove
 # 
-# cover_data_na_na <- cover_data_na |> filter(is.na(site)) |>
-#   select(image, class, pixels, `total pixels in image`) |>
-#   mutate(image = gsub("\\-P", "A\\-P", image),
-#          image = gsub("VC\\-", "VC1AB\\-", image)
-#   ) |>
-#   # create metadata
-#   separate_wider_regex(image,
-#                        c(site = "^\\D+",
-#                          month = "\\d\\d",
-#                          day = "\\d\\d",
-#                          year = "\\d\\d",
-#                          subsite = "\\D+",
-#                          quadrat = ".*[AB]|extra", # some funky quad names
-#                          "\\-*",
-#                          photo_id = ".+",
-#                          "_masks\\.csv")
-#                        ,too_few = "debug",
-#                        cols_remove = FALSE
-#   )  |>
-#   mutate(image_name = image)
-  
+#   
+# ## Some light cleaning
+# cover_data <- cover_data |>
+#   select(-folder, -image_name) |>
+#   mutate(depth = gsub(" .*", "", depth),#trim site name from some
+#          year = gsub(" .*", "", year),
+#          site = gsub(" ", "", site)) 
+#   
+# # new data for annotations we already did
+# annotated_cover_data <- read_csv("data/annotations/Annotated_photos_coverage_19_20251029.csv") |>
+#   rename(image = Image) |>
+#   rename(pixels = pixels_predicted) |>
+#   mutate(image = gsub("-", "\\/", image),
+#          image = gsub("_", "\\/", image)) |>
+#   separate_wider_delim(image, "/",
+#                        names = c("year",
+#                                  "site",
+#                                  "depth", 
+#                                  "image_name"),
+#                        too_few = "debug",
+#                        too_many = "merge", # some subsites and image names were split
+#                        cols_remove = FALSE) |>
+#   # For some, depths got weird
+#   mutate(depth = ifelse(grepl("HRDeepP", depth), "Deep", depth)) |>
+#   mutate(depth = gsub("HRD", "Deep", depth))|> #filename snafu
+#   #ok, fixed
+#   select(-c(image_name, image_ok, image_pieces, image_remainder)) |>
+#   mutate(site = ifelse(site %in% c("DW", "LR", "LRB", "DWB", "DWT", "LRT"),
+#                    "HRD",
+#                    site))
+# 
+# all_cover_data <- bind_rows(cover_data, annotated_cover_data) |>
+#   mutate(image_name = gsub(".*/", "", image)) |>
+#   mutate(year = as.numeric(year),
+#          image = gsub("^HRO \\/", "HRO\\/", image)) |>
+#   mutate(image = gsub("-", "\\/", image),
+#          image = gsub("_", "\\/", image)) 
+# 
+# ##
+# # write manifest so we have it
+# ##
+# # all_cover_data |>
+# #   group_by(image) |>
+# #   slice(1L) |>
+# #   select(site, year, depth, image) |>
+# #   write_csv("data/manifest_unmarked.csv")
+# 
+# ##
+# # file info
+# ##
+# # info about new images - and fix directory structure for match
+# new_image_manifest <- read_csv("data/manifest_even_more.csv") |>
+#   rename(image = file) |>
+#   mutate(image = gsub("JPG", "png", image),
+#          image = gsub("jpg", "png", image),
+#          image = gsub("^\\.\\/", "", image),
+#          image = gsub("^(\\d\\d\\d\\d) (HR[IO])\\/", 
+#                       "\\2\\/\\1 \\2\\/", image))
+# 
+# second_new_image_manifest <- read_csv("data/manifest_new_images_third.csv")         
+# 
+# manifest <- bind_rows(read_csv("data/manifest_20251023.csv"),
+#                       new_image_manifest,
+#                       second_new_image_manifest) |>
+#   mutate(image = gsub("^HRO \\/", "HRO\\/", image))|>
+#   mutate(image = gsub("-", "\\/", image),
+#          image = gsub("_", "\\/", image))
+# 
+#   
+# 
+# # check bad joins - should be nothing
+# anti_join(manifest, all_cover_data)
+# anti_join(all_cover_data, manifest)
+# 
+# cover_joined <- left_join(all_cover_data, manifest) |>
+#   mutate(subsite = ifelse(subsite == "VDRD", "VDR", subsite)) #typo
+# 
 
-# cover_data_fixed <- bind_rows(
-#   cover_data |> filter(is.na(year)),
-#   cover_data_na |> filter(is.na(site)),
-#   cover_data_na_na
-# ) |>
-#   select(image, class, pixels, `total pixels in image`,
-#          site, year, depth) 
-  
-## Back to our regularly scheduled program
-cover_data <- cover_data |>
-  select(-folder, -image_name) |>
-  mutate(depth = gsub(" .*", "", depth),#trim site name from some
-         year = gsub(" .*", "", year),
-         site = gsub(" ", "", site)) 
-  
-# new data for annotations we already did
-annotated_cover_data <- read_csv("data/annotations/Annotated_photos_coverage_18_20251028.csv") |>
+cover_data <- read_csv("data/annotations/Photos_to_be_Annotated_coverage_19_20251029.csv") |>
   rename(image = Image) |>
-  rename(pixels = pixels_predicted) |>
-  mutate(image = gsub("-", "\\/", image),
-         image = gsub("_", "\\/", image)) |>
-  separate_wider_delim(image, "/",
-                       names = c("year",
-                                 "site",
-                                 "depth", 
-                                 "image_name"),
-                       too_few = "debug",
-                       too_many = "merge", # some subsites and image names were split
-                       cols_remove = FALSE) |>
-  # For some, depths got weird
-  mutate(depth = ifelse(grepl("HRDeepP", depth), "Deep", depth)) |>
-  mutate(depth = gsub("HRD", "Deep", depth))|> #filename snafu
-  #ok, fixed
-  select(-c(image_name, image_ok, image_pieces, image_remainder)) |>
-  mutate(site = ifelse(site %in% c("DW", "LR", "LRB", "DWB", "DWT", "LRT"),
-                   "HRD",
-                   site))
+  filter(grepl("\\/", image))
 
-all_cover_data <- bind_rows(cover_data, annotated_cover_data) |>
+annotated_cover_data <- read_csv("data/annotations/Annotated_photos_coverage_19_20251029.csv") |>
+  rename(image = Image)   |> rename(pixels = pixels_predicted) |>
+  filter(grepl("\\/", image))
+
+
+
+all_cover_data <- bind_rows(cover_data, annotated_cover_data)|>
   mutate(image_name = gsub(".*/", "", image)) |>
-  mutate(year = as.numeric(year),
-         image = gsub("^HRO \\/", "HRO\\/", image)) |>
+  mutate(image = gsub("^HRO \\/", "HRO\\/", image)) |>
   mutate(image = gsub("-", "\\/", image),
          image = gsub("_", "\\/", image)) 
 
-##
-# write manifest so we have it
-##
-# all_cover_data |>
-#   group_by(image) |>
-#   slice(1L) |>
-#   select(site, year, depth, image) |>
-#   write_csv("data/manifest_unmarked.csv")
-
-##
-# file info
-##
 # info about new images - and fix directory structure for match
 new_image_manifest <- read_csv("data/manifest_even_more.csv") |>
   rename(image = file) |>
@@ -143,18 +137,39 @@ manifest <- bind_rows(read_csv("data/manifest_20251023.csv"),
   mutate(image = gsub("-", "\\/", image),
          image = gsub("_", "\\/", image))
 
-  
 
-# check bad joins - should be nothing
-anti_join(manifest, all_cover_data)
-anti_join(all_cover_data, manifest)
 
+# check bad joins 
+anti_join(manifest, all_cover_data) |> pull(image) |> unique() -> ma_bad
+anti_join(all_cover_data, manifest) |> pull(image) |> unique() -> am_bad
+
+ma_bad # is ok if there are things here
+am_bad #is not ok if there are things here
+
+# deal with duplicate entries
 cover_joined <- left_join(all_cover_data, manifest) |>
   mutate(subsite = ifelse(subsite == "VDRD", "VDR", subsite)) #typo
 
+cover_joined_remove_dups <- cover_joined |>
+  group_by(site, subsite, year, class, pixels, `total pixels in image`) |>
+  slice(1L) |> ungroup()
+
+
+##
+# fix the gersemia mis-identification issue
+# currently, our training set only has GRS in it
+# but that is from HRD images. However, from 
+# Ken's knowledge, while HRD has GRS from time to time
+# it has NEVER been in HRI or HRO - but, we did not have
+# any images with ALS from HRD or HRO in the training set
+# and they look very very similar, so, all GRS from HRI and HRO
+# is assumed to be ALS
+##
+cover_grs_fix <- cover_joined_remove_dups |>
+  mutate(class = ifelse(class=="GRS" & site %in% c("HRI", "HRO"), "ALS", class))
 
 # see when things were sampled
-cover_joined |>
+cover_grs_fix |>
   group_by(site, subsite, year) |>
   summarize(n_quads = n_distinct(image)) |>
   ggplot(
@@ -169,7 +184,7 @@ cover_joined |>
 # by deleting the FRM and BACK from total image pixels and then 
 # filtering BACK out as we no longer need it
 ###
-cover_joined_proportions <- cover_joined |>
+cover_joined_proportions <- cover_grs_fix |>
   group_by(site, subsite, year, image) |>
   mutate(#BACK_pixels = ifelse(class == "BACK", pixels, 0),  BACK is non-classified species
     framer_pixels = ifelse(class == "FRM", pixels, 0),
