@@ -330,6 +330,7 @@ thermal_data <- read_csv("data/Occurrence_based_species_thermal_indicies_Photos_
 subsite_data_thermal <- 
   left_join(subsite_data, thermal_data)
 
+subsite_data_thermal$gen_spp |> unique()
 ##
 # write out
 ##
