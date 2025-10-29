@@ -92,6 +92,29 @@ ggsave("figures/prior_predictive_check.jpg",
 ##
 # make the models
 ##
+fit_cover_model <- function(.x){
+  # deal with problem of infinite 0s for some species at some depths
+  if(.x$sp1[1]=="Alcyonium siderium" ){
+    .x <- .x |> filter(site !="HRD")
+  }
+  
+  if(.x$sp1[1]=="Gersemia rubiformis"){
+    .x <- .x |> filter(site =="HRD")
+  }
+  
+  
+  ordbetareg(proportion ~
+               year_cent*depth + (1|subsite),
+             data = .x,
+             coef_prior_SD = 10,
+             intercept_prior_mean = 0,
+             intercept_prior_SD = 10, 
+             phi_intercept_prior_SD = 1,
+             file = glue::glue("models/abundance_models/{.x$sp1[1]}.rds"),
+             file_refit = 
+               "always")
+}
+
 mods_long <- subsite_substrate_long |>
  # debug, try with only a few species
  # filter(species %in% c("scypha_sp", "botryllus_schlosseri")) |>
@@ -102,16 +125,7 @@ mods_long <- subsite_substrate_long |>
            ) |>
   mutate(sp1 = species) |>
   nest() |>
-  mutate(mod = map(data, ~ordbetareg(proportion ~
-                                       year_cent*depth + (1|subsite),
-                                      data = .x,
-                                     coef_prior_SD = 10,
-                                     intercept_prior_mean = 0,
-                                     intercept_prior_SD = 10, 
-                                     phi_intercept_prior_SD = 1,
-                                     file = glue::glue("models/abundance_models/{.x$sp1[1]}.rds"),
-                                     file_refit = 
-                                       "always")),
+  mutate(mod = map(data, ~fit_cover_model(.x)),
                                        #"on_change")), #.x is a placeholder for each nested df
          coef = map(mod, ~tidy(.x) |> filter(term == "year_cent")),
          fitted = map2(mod, data, get_fitted_values))
