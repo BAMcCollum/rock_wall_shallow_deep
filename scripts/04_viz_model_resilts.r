@@ -23,14 +23,14 @@ ggplot(coefs_long,
        aes(x = year_cent.trend,
            xmin = lower.HPD, xmax = upper.HPD,
            y = species, color = depth, shape = depth)) +
-  geom_point(size = 2) +
+  geom_point(size = 3) +
   geom_linerange() +
-  labs(x="logit trend", y = "", color = "", shape = "") +
+  labs(x="Coefficient of Change", y = "", color = "", shape = "") +
   geom_vline(xintercept = 0, lty = 2) +
   depth_color_scale() +
   theme(legend.position = "bottom")
 
-ggsave("figures/coefs.jpg", width = 6, height = 4)
+ggsave("figures/coefs.jpg", width = 7, height = 5)
 
 ## show as heat map
 
