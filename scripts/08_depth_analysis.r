@@ -209,7 +209,8 @@ modelbased::estimate_expectation(depth_thermal_decadal_mod,
   scale_y_continuous(transform = "reverse") +
   labs(y = "Central Depth (m)", x = "Thermal Preference",
        color = "", fill = "") +
-  facet_wrap(vars(decade))
+  facet_wrap(vars(decade))+
+  theme(legend.position="none")
 
 ggsave("figures/central_depth_model.jpg", width = 8, height = 4)
 
