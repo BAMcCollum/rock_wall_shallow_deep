@@ -20,9 +20,9 @@ coefout %>%
   ggplot(aes(x=gen_spp)) +
   
   
-  geom_point(aes(y=BO21_tempmax_bdmean_q5),  color = color2, alpha=.5)+
-  geom_point(aes(y=BO21_tempmax_bdmean_q95), color = color2, alpha=.5)+
-  geom_point(aes(y=BO21_tempmax_bdmean_mean), color = color2, alpha=1, size=2)+
+  geom_point(aes(y=BO21_tempmax_bdmean_q5),  color = color2, alpha=.5, size=2)+
+  geom_point(aes(y=BO21_tempmax_bdmean_q95), color = color2, alpha=.5, size=2)+
+  geom_point(aes(y=BO21_tempmax_bdmean_mean), color = color2, alpha=1, size=3)+
   geom_segment(aes(xend=gen_spp,
                    y=BO21_tempmax_bdmean_q5,
                    yend=BO21_tempmax_bdmean_q95), color = color2, alpha=.5)+
@@ -42,7 +42,7 @@ coefout %>%
   geom_hline(yintercept=c(15.3, 17.5), linetype='dashed', color=c('turquoise', 'green')) + #Pre 2004 95% quantile for 15m and 25m
   geom_hline(yintercept=c(17.9, 19.6), color=c('turquoise', 'green')) + #Post 2004 95% quantile for 15m and 25m
   theme(axis.text.x = element_text(face = "italic")) +
-  theme(axis.text=element_text(size=16),
+  theme(axis.text=element_text(size=18),
         axis.title=element_text(size=18))
 
 ggsave("figures/thermal_preference_ranges.jpg")
