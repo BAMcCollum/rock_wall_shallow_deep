@@ -11,6 +11,7 @@ library(glue)
 library(car)
 library(gt)
 library(emmeans)
+library(wesanderson)
 
 # load data and set themes
 source("scripts/load_data_settings.r")
@@ -113,6 +114,8 @@ central_depth_decadal <- common_sampling_subsites |>
   group_by(species, decade, BO21_tempmax_bdmin_mean) |>
   summarize(central_depth = mean(central_depth, na.rm = TRUE))
 
+View(central_depth_decadal)
+
 # for the labels
 central_depth_decadal_last <- filter(central_depth_decadal, decade == "2011-2023")
 
@@ -202,6 +205,10 @@ emtrends(depth_thermal_decadal_mod,
   contrast(method = "pairwise", adjust = "none")
   
 ## Viz
+
+cbbPalette <- c("#E69F00", "#009E73", "#56B4E9")
+
+
 modelbased::estimate_expectation(depth_thermal_decadal_mod, 
                                  by = c("BO21_tempmax_bdmin_mean", 
                                         "decade")) |> 
@@ -210,7 +217,9 @@ modelbased::estimate_expectation(depth_thermal_decadal_mod,
   labs(y = "Central Depth (m)", x = "Thermal Preference",
        color = "", fill = "") +
   facet_wrap(vars(decade))+
-  theme(legend.position="none")
+  theme(legend.position="none")+
+  scale_color_manual(values= cbbPalette)+
+  scale_fill_manual(values= cbbPalette)
 
 ggsave("figures/central_depth_model.jpg", width = 8, height = 4)
 
