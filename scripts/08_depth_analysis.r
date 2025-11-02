@@ -115,6 +115,7 @@ central_depth_decadal <- common_sampling_subsites |>
   summarize(central_depth = mean(central_depth, na.rm = TRUE))
 
 View(central_depth_decadal)
+#write_csv(central_depth_decadal, "data/central_depth_decadal.csv")
 
 # for the labels
 central_depth_decadal_last <- filter(central_depth_decadal, decade == "2011-2023")
@@ -155,6 +156,8 @@ central_depth_annual <- common_sampling_subsites |>
   group_by(species, year, BO21_tempmax_bdmin_mean) |>
   summarize(central_depth = sum((average_depth*proportion)/sum(proportion))) 
 
+#write_csv(central_depth_annual, "data/central_depth_annual.csv")
+
 # all
 ggplot(central_depth_annual,
        aes(x = year, y = central_depth, group = species)) +
@@ -175,6 +178,40 @@ ggplot(central_depth_annual |> filter(!is.na(BO21_tempmax_bdmin_mean)),
 
 ggsave("figures/central_depth_by_year_thermal.jpg", width = 10, height = 4)  
 
+##
+# Model influence of species and year on change in central depth
+##
+
+cda <- read_csv("data/central_depth_annual.csv")
+View(cda)
+
+mod_annual <- lm(central_depth ~ species*year, data = cda)
+# check assumptions: Interaction effects generate collinearity. 
+performance::check_model(mod_annual)
+
+# omnibus test
+Anova(mod_annual)
+performance::r2(depth_thermal_decadal_mod)
+
+# posthoc
+emmeans(mod_annual, ~year|species, at = list(year = c(1989, 2023))) #|> 
+  contrast(method = "pairwise")
+
+# Visualize
+
+modelbased::estimate_expectation(mod_annual, 
+                                 by = c("year", 
+                                        "species")) |> 
+  plot(show_data = TRUE) +
+  scale_y_continuous(transform = "reverse") +
+  labs(y = "Central Depth (m)", x = "Year",
+       color = "", fill ="")+
+  facet_wrap(~species)+
+  theme(legend.position="none")
+ggsave("figures/central_depth_annual_model.jpg")
+
+emmeans(mod_annual, ~year|species, at = list(c(1989, 2023))) |>
+  tidy()
 
 ##
 # Model influence of thermal preference on change in central depth
@@ -204,7 +241,7 @@ emtrends(depth_thermal_decadal_mod,
          "BO21_tempmax_bdmin_mean") |> 
   contrast(method = "pairwise", adjust = "none")
   
-#emmeans(depth_thermal_decadal_mod, ~species | decade) |> contrast(method = "pairwise")
+
 
 ## Viz
 
