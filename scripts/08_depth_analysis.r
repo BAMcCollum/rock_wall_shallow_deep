@@ -186,6 +186,7 @@ cda <- read_csv("data/central_depth_annual.csv")
 View(cda)
 
 mod_annual <- lm(central_depth ~ species*year, data = cda)
+
 # check assumptions: Interaction effects generate collinearity. 
 performance::check_model(mod_annual)
 
@@ -194,7 +195,7 @@ Anova(mod_annual)
 performance::r2(depth_thermal_decadal_mod)
 
 # posthoc
-emmeans(mod_annual, ~year|species, at = list(year = c(1989, 2023))) #|> 
+emmeans(mod_annual, ~year|species, at = list(year = c(1989, 2023))) |> 
   contrast(method = "pairwise")
 
 # Visualize
@@ -210,8 +211,7 @@ modelbased::estimate_expectation(mod_annual,
   theme(legend.position="none")
 ggsave("figures/central_depth_annual_model.jpg")
 
-emmeans(mod_annual, ~year|species, at = list(c(1989, 2023))) |>
-  tidy()
+
 
 ##
 # Model influence of thermal preference on change in central depth
