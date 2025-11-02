@@ -33,7 +33,7 @@ common_sampling_subsites <- subsite_substrate_long |>
   mutate(decade = cut(year, breaks = c(1988, 2000, 2010, 2024)),
          decade = factor(decade,
                          labels = c("1989-2000", "2001-2010", "2011-2023"))) 
-  
+
 
 # output plot of depth distribution for each species
 for(one_sp in unique(common_sampling_subsites$species)){
@@ -195,7 +195,7 @@ performance::r2(depth_thermal_decadal_mod)
 # posthoc
 emtrends(depth_thermal_decadal_mod, 
         ~decade, 
-        "BO21_tempmax_bdmin_mean") |> plot() +
+        "BO21_tempmax_bdmin_mean") # |> plot() +
   geom_vline(xintercept = 0, lty = 2)
 
 
@@ -204,10 +204,11 @@ emtrends(depth_thermal_decadal_mod,
          "BO21_tempmax_bdmin_mean") |> 
   contrast(method = "pairwise", adjust = "none")
   
+#emmeans(depth_thermal_decadal_mod, ~species | decade) |> contrast(method = "pairwise")
+
 ## Viz
 
 cbbPalette <- c("#E69F00", "#009E73", "#56B4E9")
-
 
 modelbased::estimate_expectation(depth_thermal_decadal_mod, 
                                  by = c("BO21_tempmax_bdmin_mean", 

@@ -22,7 +22,8 @@ source("scripts/load_data_settings.r")
 coefs_long <- read_csv("data/change_coefficients_ordbetareg.csv")|>
   mutate(interval = (upper.HPD - lower.HPD)/2,
          prec = 1/sqrt(interval))
-#View (coefs_with_indicies)
+
+View (coefs_long)
 
 ##
 # initial check
@@ -55,13 +56,13 @@ check_model(mod_bdmean_min)
 # Omnibus test
 ##
 Anova(mod_bdmean_min)
-
+performance::r2(mod_bdmean_min)
 ##
 # difference in slopes
 ##
 emtrends(mod_bdmean_min, 
          specs =~ depth,
-         var = "BO21_tempmax_bdmin_mean") |> plot() +
+         var = "BO21_tempmax_bdmin_mean") #|> plot() +
   geom_vline(xintercept = 0, lty = 2)
 
 emtrends(mod_bdmean_min, 
@@ -71,7 +72,7 @@ emtrends(mod_bdmean_min,
            p.adjust = "none") |>
   tidy() |>
   select(-term, -null.value) |>
-  mutate(across(where(is.numeric), round, 3)) |>
+  mutate(across(where(is.numeric), round, 3)) # |>
   gt::gt()|>
   gtsave("tables/depth_temp_slope_comparison.docx")
 
