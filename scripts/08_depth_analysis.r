@@ -200,6 +200,41 @@ emmeans(mod_annual, ~year|species, at = list(year = c(1989, 2023))) |>
 
 # Visualize
 
+#get sp and thermal info
+s_temp <- cda |> ungroup() |> 
+  select(species, BO21_tempmax_bdmin_mean) |>
+  group_by(species) |> slice(1L)
+
+# for later plot  
+cda <- cda |>
+  mutate(species_ordered = 
+           forcats::fct_reorder(species,
+                                BO21_tempmax_bdmin_mean,
+                                .na_rm = FALSE))
+
+
+# cross with year and predict using augment then plot
+tidyr::crossing(s_temp,
+                year = modelr::seq_range(cda$year, n = 200)) |>
+  broom::augment(mod_annual, newdata = _, interval = "confidence")|>
+  mutate(species_ordered = 
+           forcats::fct_reorder(species,
+                                BO21_tempmax_bdmin_mean,
+                                .na_rm = FALSE)) |>
+  ggplot(aes(x = year, y = .fitted, group = species,
+             color = BO21_tempmax_bdmin_mean, fill = BO21_tempmax_bdmin_mean)) + # you could also color by temp
+  #geom_line() +
+ # geom_ribbon(aes(ymin = .lower, ymax = .upper), 
+ #             alpha = 0.3, color = NA) +
+  geom_line(data = cda, 
+             mapping = aes(y = central_depth)) +
+  year_color_scale(transform = "reverse")+
+  scale_y_continuous(transform = "reverse") +
+  labs(y = "Central Depth (m)", x = "Year",
+       color = "", fill ="")+
+  facet_wrap(vars(species_ordered))
+ggsave("figures/central_depth_annual_model_line.jpg")  
+
 modelbased::estimate_expectation(mod_annual, 
                                  by = c("year", 
                                         "species")) |> 
