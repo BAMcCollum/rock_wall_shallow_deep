@@ -257,7 +257,7 @@ tidyr::crossing(s_temp,
   labs(y = "Central Depth (m)", x = "Year",
        color = "", fill ="")+
   facet_wrap(vars(species_ordered))
-ggsave("figures/central_depth_annual_model_point.jpg")
+ggsave("figures/central_depth_annual_model_point.jpg", width = 14.9, height = 6)
 
 modelbased::estimate_expectation(mod_annual, 
                                  by = c("year", 
