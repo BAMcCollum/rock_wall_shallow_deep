@@ -183,8 +183,10 @@ ggsave("figures/central_depth_by_year_thermal.jpg", width = 10, height = 4)
 ##
 
 cda <- read_csv("data/central_depth_annual.csv")
+
 View(cda)
 
+cda$year <- as.factor(cda$year)
 
 mod_annual <- lm(central_depth ~ species*year, data = cda)
 
@@ -281,14 +283,24 @@ depth_thermal_decadal_mod <-
                      (decade|species),
      data = central_depth_decadal)
 
+depth_thermal_annual_linear <-
+  glmmTMB::glmmTMB(central_depth ~ year * BO21_tempmax_bdmin_mean + (1|species),
+                   data = cda)
+
+
 # check assumptions
 performance::check_model(depth_thermal_decadal_mod)
+performance::check_model(depth_thermal_annual_linear)
 
 # omnibus test
 Anova(depth_thermal_decadal_mod)
 performance::r2(depth_thermal_decadal_mod)
 
+Anova(depth_thermal_annual_linear)
+performance::r2(depth_thermal_annual_linear)
+
 # posthoc
+
 emtrends(depth_thermal_decadal_mod, 
         ~decade, 
         "BO21_tempmax_bdmin_mean") # |> plot() +
@@ -297,10 +309,20 @@ emtrends(depth_thermal_decadal_mod,
 
 emtrends(depth_thermal_decadal_mod, 
          ~decade, 
-         "BO21_tempmax_bdmin_mean") |> 
+         "BO21_tempmax_bdmin_mean") #|> 
   contrast(method = "pairwise", adjust = "none")
-  
 
+  
+emmeans(depth_thermal_decadal_mod,
+        ~decade | BO21_tempmax_bdmin_mean,
+        at = list(BO21_tempmax_bdmin_mean = c(10.5, 19))) |>
+  contrast(method = "pairwise", adjust = "none")
+
+emmeans(depth_thermal_annual_linear,
+        ~ year | BO21_tempmax_bdmin_mean,
+        at = list(BO21_tempmax_bdmin_mean = c(10, 17.5),
+                  year = c(1991, 2023))) |>
+  contrast(method = "pairwise", adjust = "none")
 
 ## Viz
 
